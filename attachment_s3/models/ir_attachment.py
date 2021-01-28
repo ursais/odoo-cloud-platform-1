@@ -52,10 +52,11 @@ class IrAttachment(models.Model):
         if host and not urlsplit(host).scheme:
             host = 'https://%s' % host
 
-        region_name = os.environ.get('AWS_REGION')
-        access_key = os.environ.get('AWS_ACCESS_KEY_ID')
-        secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
-        bucket_name = name or os.environ.get('AWS_BUCKETNAME')
+        region_name = os.environ.get("AWS_REGION")
+        access_key = os.environ.get("AWS_ACCESS_KEY_ID")
+        secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+        bucket_name = name or os.environ.get("AWS_BUCKETNAME")
+        bucket_name += "-" + self.env.cr.dbname
 
         params = {
             'aws_access_key_id': access_key,
@@ -146,7 +147,11 @@ class IrAttachment(models.Model):
             with io.BytesIO() as file:
                 file.write(bin_data)
                 file.seek(0)
-                filename = 's3://%s/%s' % (bucket.name, key)
+                filename = "s3://%s-%s/%s" % (
+                    bucket.name,
+                    self.env.cr.dbname,
+                    key,
+                )
                 try:
                     obj.upload_fileobj(file)
                 except ClientError as error:
